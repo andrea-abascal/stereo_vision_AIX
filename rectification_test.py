@@ -12,8 +12,11 @@ stereoMapR_y = cv_file.getNode('stereoMapR_y').mat()
 roi_L = cv_file.getNode('roi_L').mat()
 roi_R= cv_file.getNode('roi_R').mat()
     
-capL =cv2.VideoCapture(4)
-capR = cv2.VideoCapture(2)
+capL = cv2.VideoCapture(2)
+capL.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+capR =cv2.VideoCapture(0)
+capR.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+
 cv2.waitKey(1000)
 
 while capR.isOpened() and capL.isOpened():
@@ -57,6 +60,7 @@ while capR.isOpened() and capL.isOpened():
     cv2.line(frameL, (0,int(h/8)*6), (w,int(h/8)*6), (0, 255, 0) , 1)
 
       # Display the resulting frame
+    cv2.namedWindow('Original Img', cv2.WINDOW_NORMAL)
     img = np.concatenate((frameL, frameR), axis = 1)
     cv2.imshow('Original Img', img)
     cv2.imshow('Left', frameL)

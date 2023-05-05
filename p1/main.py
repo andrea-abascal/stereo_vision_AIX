@@ -3,10 +3,11 @@
 import cv2
 import numpy as np
 # Open stereo camera
-
-
-capL = cv2.VideoCapture(4)
-capR =cv2.VideoCapture(2)
+capL = cv2.VideoCapture(2)
+capL.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+capR =cv2.VideoCapture(0)
+capR.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+cv2.waitKey(2000)
 #cap.set(3,640)
 #cap.set(4,480)
 
@@ -17,6 +18,7 @@ while capR.isOpened() and capL.isOpened():
     
     
       # Display the resulting frame
+    cv2.namedWindow('Original Img', cv2.WINDOW_NORMAL)
     img = np.concatenate((frameL, frameR), axis = 1)
     cv2.imshow('Original Img', img)
     cv2.imshow('Left', frameL)

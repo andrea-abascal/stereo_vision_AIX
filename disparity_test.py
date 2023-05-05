@@ -13,8 +13,10 @@ roi_R= cv_file.getNode('roi_R').mat()
 cv_file.release()
 
 # Open both cameras
-capL =cv2.VideoCapture(4)
-capR = cv2.VideoCapture(2)
+capL = cv2.VideoCapture(2)
+capL.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+capR =cv2.VideoCapture(0)
+capR.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
 
  
 cv2.namedWindow('disp',cv2.WINDOW_NORMAL)
@@ -104,6 +106,7 @@ while capR.isOpened() and capL.isOpened():
                      
 
       # Display the resulting frame
+    cv2.namedWindow('Original Img', cv2.WINDOW_NORMAL)
     img = np.concatenate((frameL, frameR), axis = 1)
     cv2.imshow('Original Img', img)
  
