@@ -28,19 +28,21 @@ while capR.isOpened() and capL.isOpened():
    
     # crop the image
     xL, yL, wL, hL = roi_L
-    wL = int(w)
-    hL = int(h)
+    xL = int(xL)
+    yL = int(yL)
+    wL = int(wL)
+    hL = int(hL)
     frameL = frameL[yL:yL+hL, xL:xL+wL]
    
     xR, yR, wR, hR = roi_R
-   
+    xR = int(xR)
+    yR = int(yR)
     wR = int(wR)
     hR = int(hR)
     frameR = frameR[yR:yR+hR, xR:xR+wR]
 
     w = min(wL,wR)
-    h = (hR + hL)* 0.5
-
+    h = hL
     frameL = cv2.resize(frameL, (w,h),interpolation = cv2.INTER_AREA)
 
     frameR = cv2.resize(frameR, (w,h),interpolation = cv2.INTER_AREA)
