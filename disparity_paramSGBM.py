@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import time
 
 # Camera parameters to undistort and rectify images
 cv_file = cv2.FileStorage()
@@ -19,43 +18,24 @@ capL.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
 capR =cv2.VideoCapture(0)
 capR.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
 
+def nothing(x):
+    pass
  
 cv2.namedWindow('disp',cv2.WINDOW_NORMAL)
-cv2.resizeWindow('disp',640,480)
+cv2.resizeWindow('disp',604,436)
+ 
+cv2.createTrackbar('numDisparities','disp',1,17,nothing)
+cv2.createTrackbar('blockSize','disp',5,50,nothing)
+cv2.createTrackbar('preFilterCap','disp',5,62,nothing)
+cv2.createTrackbar('uniquenessRatio','disp',15,100,nothing)
+cv2.createTrackbar('speckleRange','disp',0,100,nothing)
+cv2.createTrackbar('speckleWindowSize','disp',3,25,nothing)
+cv2.createTrackbar('disp12MaxDiff','disp',5,25,nothing)
+cv2.createTrackbar('minDisparity','disp',5,25,nothing)
+ 
+# Creating an object of StereoBM algorithm
+stereo = cv2.StereoSGBM_create()
 
-algorithm = int(input('Select BM (1) or SGBM (2): '))
-cv_file_disp = cv2.FileStorage()
-if algorithm ==  1:
-    cv_file_disp.open('data/disparity_map_params.xml', cv2.FileStorage_READ)
-    # Creating an object of StereoBM algorithm
-    stereo = cv2.StereoBM_create()
-else:
-    cv_file_disp.open('data/disparity_map_paramsSGBM.xml', cv2.FileStorage_READ)
-    # Creating an object of StereoSGBM algorithm
-    stereo = cv2.StereoSGBM_create()
-
- # Updating the parameters based on the trackbar positions
-numDisparities = cv_file_disp.getNode('numDisparities').real()
-blockSize = cv_file_disp.getNode('blockSize').real()
-preFilterCap = cv_file_disp.getNode('preFilterCap').real()
-uniquenessRatio = cv_file_disp.getNode('uniquenessRatio').real()
-speckleRange = cv_file_disp.getNode('speckleRange').real()
-speckleWindowSize = cv_file_disp.getNode('speckleWindowSize').real()
-disp12MaxDiff = cv_file_disp.getNode('disp12MaxDiff').real()
-minDisparity = cv_file_disp.getNode('minDisparity').real()
-
-if algorithm == 1 :
-    preFilterType = cv_file_disp.getNode('preFilterType').real()
-    preFilterSize = cv_file_disp.getNode('preFilterSize').real()
-    textureThreshold = cv_file_disp.getNode('textureThreshold').real()
-else:
-    pass
-
-cv_file_disp.release()
-
-
-prevTime = 0
-newTime = 0
 
 while capR.isOpened() and capL.isOpened():
     # Capture frame-by-frame
@@ -91,26 +71,30 @@ while capR.isOpened() and capL.isOpened():
 
     frameR = cv2.resize(frameR, (w,h),interpolation = cv2.INTER_AREA)
    
-    # Setting the updated parameters before computing disparity map
-    stereo.setNumDisparities(int(numDisparities))
-    stereo.setBlockSize(int(blockSize))
-    stereo.setPreFilterCap(int(preFilterCap))
-    stereo.setUniquenessRatio(int(uniquenessRatio))
-    stereo.setSpeckleRange(int(speckleRange))
-    stereo.setSpeckleWindowSize(int(speckleWindowSize))
-    stereo.setDisp12MaxDiff(int(disp12MaxDiff))
-    stereo.setMinDisparity(int(minDisparity))
 
-    if algorithm == 1 :
-        stereo.setPreFilterType(int(preFilterType))
-        stereo.setPreFilterSize(int(preFilterSize))
-        stereo.setTextureThreshold(int(textureThreshold))
-    else:
-        pass
+
+    # Updating the parameters based on the trackbar positions
+    numDisparities = cv2.getTrackbarPos('numDisparities','disp')*16
+    blockSize = cv2.getTrackbarPos('blockSize','disp')*2 + 5
+    preFilterCap = cv2.getTrackbarPos('preFilterCap','disp')
+    uniquenessRatio = cv2.getTrackbarPos('uniquenessRatio','disp')
+    speckleRange = cv2.getTrackbarPos('speckleRange','disp')
+    speckleWindowSize = cv2.getTrackbarPos('speckleWindowSize','disp')*2
+    disp12MaxDiff = cv2.getTrackbarPos('disp12MaxDiff','disp')
+    minDisparity = cv2.getTrackbarPos('minDisparity','disp')
+     
+    # Setting the updated parameters before computing disparity map
+    stereo.setNumDisparities(numDisparities)
+    stereo.setBlockSize(blockSize)
+    stereo.setPreFilterCap(preFilterCap)
+    stereo.setUniquenessRatio(uniquenessRatio)
+    stereo.setSpeckleRange(speckleRange)
+    stereo.setSpeckleWindowSize(speckleWindowSize)
+    stereo.setDisp12MaxDiff(disp12MaxDiff)
+    stereo.setMinDisparity(minDisparity)
  
     # Calculating disparity using the StereoBM algorithm
     disparity = stereo.compute(frameL,frameR,cv2.CV_32F)
-
     # NOTE: Code returns a 16bit signed single channel image,
     # CV_16S containing a disparity map scaled by 16. Hence it 
     # is essential to convert it to CV_32F and scale it down 16 times.
@@ -122,25 +106,33 @@ while capR.isOpened() and capL.isOpened():
     #disparity = (disparity/16.0 - minDisparity)/numDisparities
     norm_coeff = 255/ disparity.max()
 
-   #Display fps
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    newTime = time.time()
-    fps = 1/(newTime - prevTime)
-    prevTime = newTime
-    fps_text = 'FPS: {:.2f}'.format(fps)
-    print(fps_text)
-  
+ 
     # Displaying the disparity map
-    #cv2.putText(disparity, fps_text, (7,70), font, 1, (100, 255, 0), 1)
     cv2.imshow("disp",disparity* norm_coeff/255)
                      
 
-
-    
+      # Display the resulting frame
+    cv2.namedWindow('Original Img', cv2.WINDOW_NORMAL)
+    img = np.concatenate((frameL, frameR), axis = 1)
+    cv2.imshow('Original Img', img)
+  
     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
         
+print('Saving depth estimation parameters ......')
+
+cv_file = cv2.FileStorage('data/disparity_map_paramsSGBM.xml', cv2.FILE_STORAGE_WRITE)
+cv_file.write("numDisparities",numDisparities)
+cv_file.write("blockSize",blockSize)
+cv_file.write("preFilterCap",preFilterCap)
+cv_file.write("uniquenessRatio",uniquenessRatio)
+cv_file.write("speckleRange",speckleRange)
+cv_file.write("speckleWindowSize",speckleWindowSize)
+cv_file.write("disp12MaxDiff",disp12MaxDiff)
+cv_file.write("minDisparity",minDisparity)
+cv_file.write("M",39.075)
+cv_file.release()
 
 # Release and destroy all windows before termination
 capR.release()
