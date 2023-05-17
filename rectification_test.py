@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import time
 
 # Camera parameters to undistort and rectify images
 cv_file = cv2.FileStorage()
@@ -18,6 +19,8 @@ capR =cv2.VideoCapture(0)
 capR.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
 
 cv2.waitKey(1000)
+prevTime = 0
+newTime = 0
 
 while capR.isOpened() and capL.isOpened():
     # Capture frame-by-frame
@@ -31,18 +34,21 @@ while capR.isOpened() and capL.isOpened():
    
     # crop the image
     xL, yL, wL, hL = roi_L
-    wL = int(w)
-    hL = int(h)
+    xL = int(xL)
+    yL = int(yL)
+    wL = int(wL)
+    hL = int(hL)
     frameL = frameL[yL:yL+hL, xL:xL+wL]
    
     xR, yR, wR, hR = roi_R
-   
+    xR = int(xR)
+    yR = int(yR)
     wR = int(wR)
     hR = int(hR)
     frameR = frameR[yR:yR+hR, xR:xR+wR]
 
     w = min(wL,wR)
-    h = (hR + hL)* 0.5
+    h = hL
 
     frameL = cv2.resize(frameL, (w,h),interpolation = cv2.INTER_AREA)
 
@@ -58,14 +64,25 @@ while capR.isOpened() and capL.isOpened():
     cv2.line(frameL, (0,int(h/8)*2), (w,int(h/8)*2), (0, 255, 0) , 1)
     cv2.line(frameL, (0,int(h/8)*4), (w,int(h/8)*4), (0, 255, 0) , 1)
     cv2.line(frameL, (0,int(h/8)*6), (w,int(h/8)*6), (0, 255, 0) , 1)
-
-      # Display the resulting frame
-    cv2.namedWindow('Original Img', cv2.WINDOW_NORMAL)
+    
+    #Display fps
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    newTime = time.time()
+    fps = 1/(newTime - prevTime)
+    prevTime = newTime
+    fps_text = 'FPS: {:.2f}'.format(fps)
+    print(fps_text)
+  
+    
+    #Display the resulting frame
+    #cv2.namedWindow('Original Img', cv2.WINDOW_NORMAL)
     img = np.concatenate((frameL, frameR), axis = 1)
+    #cv2.putText(img, fps_text, (7,70), font, 1, (100, 255, 0), 1)
+    
     cv2.imshow('Original Img', img)
-    cv2.imshow('Left', frameL)
-    cv2.imshow('Right', frameR)
-
+    #cv2.imshow('Left', frameL)
+    #cv2.imshow('Right', frameR)
+    
     key = cv2.waitKey(1)
     
     if key & 0xFF == ord('q'):

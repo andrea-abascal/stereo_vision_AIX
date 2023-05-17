@@ -49,29 +49,31 @@ while capR.isOpened() and capL.isOpened():
     imgL_gray = cv2.cvtColor(frameL,cv2.COLOR_BGR2GRAY)
     
     # Undistort and rectify images
-    Right_nice = cv2.remap(imgR_gray, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
-    Left_nice = cv2.remap(imgL_gray, stereoMapL_x, stereoMapL_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    frameR = cv2.remap(imgR_gray, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    frameL = cv2.remap(imgL_gray, stereoMapL_x, stereoMapL_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
     
+   # crop the image
     xL, yL, wL, hL = roi_L
-    wL = int(w)
-    hL = int(h)
+    xL = int(xL)
+    yL = int(yL)
+    wL = int(wL)
+    hL = int(hL)
     frameL = frameL[yL:yL+hL, xL:xL+wL]
    
     xR, yR, wR, hR = roi_R
-   
+    xR = int(xR)
+    yR = int(yR)
     wR = int(wR)
     hR = int(hR)
     frameR = frameR[yR:yR+hR, xR:xR+wR]
 
     w = min(wL,wR)
-    h = (hR + hL)* 0.5
+    h = hL
 
     frameL = cv2.resize(frameL, (w,h),interpolation = cv2.INTER_AREA)
 
     frameR = cv2.resize(frameR, (w,h),interpolation = cv2.INTER_AREA)
    
-  
-    
 
 
     # Updating the parameters based on the trackbar positions
@@ -122,8 +124,7 @@ while capR.isOpened() and capL.isOpened():
     cv2.namedWindow('Original Img', cv2.WINDOW_NORMAL)
     img = np.concatenate((frameL, frameR), axis = 1)
     cv2.imshow('Original Img', img)
-    cv2.imshow('Left', frameL)
-    cv2.imshow('Right', frameR)
+  
     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

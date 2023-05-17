@@ -32,11 +32,11 @@ while capR.isOpened() and capL.isOpened():
         break
     elif key & 0xFF == ord('s'): # wait for 's' key to save
         
-        cv2.imwrite('images/original/image'+str(num)+'.png',img)
+        cv2.imwrite('images2/original/image'+str(num)+'.png',img)
         
-        cv2.imwrite('images/stereoLeft/imageL'+str(num)+'.png',frameL)
+        cv2.imwrite('images2/stereoLeft/imageL'+str(num)+'.png',frameL)
         
-        cv2.imwrite('images/stereoRight/imageR'+str(num)+'.png',frameR)
+        cv2.imwrite('images2/stereoRight/imageR'+str(num)+'.png',frameR)
         
         print("images saved!")
         

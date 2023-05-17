@@ -9,6 +9,8 @@ i = int(input("Indica el índice de la cámara: "))
 # Open stereo camera
 cap = cv2.VideoCapture(i)
 
+cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+
 width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 

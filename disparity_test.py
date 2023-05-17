@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import time
 
 # Camera parameters to undistort and rectify images
 cv_file = cv2.FileStorage()
@@ -42,7 +43,8 @@ cv_file_disp.release()
 
 # Creating an object of StereoBM algorithm
 stereo = cv2.StereoBM_create()
-
+prevTime = 0
+newTime = 0
 
 while capR.isOpened() and capL.isOpened():
     # Capture frame-by-frame
@@ -53,21 +55,26 @@ while capR.isOpened() and capL.isOpened():
     imgL_gray = cv2.cvtColor(frameL,cv2.COLOR_BGR2GRAY)
     
     # Undistort and rectify images
-    Right_nice = cv2.remap(imgR_gray, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
-    Left_nice = cv2.remap(imgL_gray, stereoMapL_x, stereoMapL_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    frameR = cv2.remap(imgR_gray, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    frameL = cv2.remap(imgL_gray, stereoMapL_x, stereoMapL_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
     
+   # crop the image
     xL, yL, wL, hL = roi_L
-    wL = int(w)
-    hL = int(h)
+    xL = int(xL)
+    yL = int(yL)
+    wL = int(wL)
+    hL = int(hL)
     frameL = frameL[yL:yL+hL, xL:xL+wL]
    
     xR, yR, wR, hR = roi_R
+    xR = int(xR)
+    yR = int(yR)
     wR = int(wR)
     hR = int(hR)
     frameR = frameR[yR:yR+hR, xR:xR+wR]
 
     w = min(wL,wR)
-    h = (hR + hL)* 0.5
+    h = hL
 
     frameL = cv2.resize(frameL, (w,h),interpolation = cv2.INTER_AREA)
 
@@ -100,16 +107,21 @@ while capR.isOpened() and capL.isOpened():
     #disparity = (disparity/16.0 - minDisparity)/numDisparities
     norm_coeff = 255/ disparity.max()
 
- 
+   #Display fps
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    newTime = time.time()
+    fps = 1/(newTime - prevTime)
+    prevTime = newTime
+    fps_text = 'FPS: {:.2f}'.format(fps)
+    print(fps_text)
+  
     # Displaying the disparity map
+    #cv2.putText(disparity, fps_text, (7,70), font, 1, (100, 255, 0), 1)
     cv2.imshow("disp",disparity* norm_coeff/255)
                      
 
-      # Display the resulting frame
-    cv2.namedWindow('Original Img', cv2.WINDOW_NORMAL)
-    img = np.concatenate((frameL, frameR), axis = 1)
-    cv2.imshow('Original Img', img)
- 
+
+    
     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

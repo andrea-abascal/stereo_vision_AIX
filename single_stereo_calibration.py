@@ -25,8 +25,8 @@ imgpointsL = [] # 2d points in image plane.
 imgpointsR = [] # 2d points in image plane.
 
 
-imagesLeft = sorted(glob.glob('stereoLeft/*.png'))
-imagesRight = sorted(glob.glob('stereoRight/*.png'))
+imagesLeft = sorted(glob.glob('images/stereoLeft/*.png'))
+imagesRight = sorted(glob.glob('images/stereoRight/*.png'))
 
 for imgLeft, imgRight in zip(imagesLeft, imagesRight):
 
@@ -87,10 +87,10 @@ print( "total error Left: {}".format(mean_errorL/len(objpoints)) )
 print( "total error Right: {}".format(mean_errorR/len(objpoints)) )
 
 ########## Stereo Vision Calibration #############################################
-heightL, widthL, channelsL = grayL.shape
+heightL, widthL, channelsL = imgL.shape
 newCameraMatrixL, roi_L = cv2.getOptimalNewCameraMatrix(cameraMatrixL, distL, (widthL, heightL), 1, (widthL, heightL))
 
-heightR, widthR, channelsR = grayR.shape
+heightR, widthR, channelsR = imgR.shape
 newCameraMatrixR, roi_R = cv2.getOptimalNewCameraMatrix(cameraMatrixR, distR, (widthR, heightR), 1, (widthR, heightR))
 
 
@@ -114,7 +114,7 @@ cv_file.write('shape_L',grayL)
 
 
 cv_file.write('retStereo',retStereo)
-cv_file.write('newCameraMatrixL',imgpointsL)
+cv_file.write('newCameraMatrixL',newCameraMatrixL)
 cv_file.write('distL',distL)
 cv_file.write('newCameraMatrixR',newCameraMatrixR)
 cv_file.write('distR',distR)
