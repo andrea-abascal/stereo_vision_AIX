@@ -68,9 +68,6 @@ while capR.isOpened() and capL.isOpened():
 
     frameR = cv2.resize(frameR, (w,h),interpolation = cv2.INTER_AREA)
    
-  
-    
-
 
     # Updating the parameters based on the trackbar positions
     numDisparities = cv2.getTrackbarPos('numDisparities','disp')*16
@@ -110,7 +107,7 @@ while capR.isOpened() and capL.isOpened():
     cv2.imshow("disp",disparity* norm_coeff/255)
                      
 
-      # Display the resulting frame
+    # Display the resulting frame
     img = np.concatenate((frameL, frameR), axis = 1)
     cv2.imshow('Original Img', img)
 

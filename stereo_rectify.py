@@ -35,6 +35,7 @@ stereoMapR = cv2.initUndistortRectifyMap(newCameraMatrixR, distR, rectR, projMat
 
 
 print("Saving parameters!")
+
 cv_file = cv2.FileStorage('data/stereoMap.xml', cv2.FILE_STORAGE_WRITE)
 
 cv_file.write('stereoMapL_x',stereoMapL[0])

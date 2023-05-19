@@ -48,7 +48,6 @@ while capR.isOpened() and capL.isOpened():
     frameR = cv2.resize(frameR, (w,h),interpolation = cv2.INTER_AREA)
    
     #Visualize scanlines:
-    
     cv2.line(frameR, (0,int(h/8)*2), (w,int(h/8)*2), (0, 255, 0) , 1)
     cv2.line(frameR, (0,int(h/8)*4), (w,int(h/8)*4), (0, 255, 0) , 1)
     cv2.line(frameR, (0,int(h/8)*6), (w,int(h/8)*6), (0, 255, 0) , 1)
@@ -58,7 +57,7 @@ while capR.isOpened() and capL.isOpened():
     cv2.line(frameL, (0,int(h/8)*4), (w,int(h/8)*4), (0, 255, 0) , 1)
     cv2.line(frameL, (0,int(h/8)*6), (w,int(h/8)*6), (0, 255, 0) , 1)
 
-      # Display the resulting frame
+    # Display the resulting frame
     img = np.concatenate((frameL, frameR), axis = 1)
     cv2.imshow('Original Img', img)
     cv2.imshow('Left', frameL)

@@ -114,7 +114,7 @@ while capR.isOpened() and capL.isOpened():
     frameR = cv2.remap(imgR_gray, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
     frameL = cv2.remap(imgL_gray, stereoMapL_x, stereoMapL_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
     
-   # Crop the image usion ROI
+    # Crop the image usion ROI
     xL, yL, wL, hL = roi_L
     xL = int(xL)
     yL = int(yL)
@@ -141,22 +141,24 @@ while capR.isOpened() and capL.isOpened():
     disparityL = leftMatcher.compute(frameL,frameR)
     disparityR = rightMatcher.compute(frameR,frameL)
     
-   
-    # NOTE: Code returns a 16bit signed single channel image,
-    # CV_16S containing a disparity map scaled by 16. Hence it 
-    # is essential to convert it to CV_32F and scale it down 16 times.
- 
-    # Converting to float32 
-    #disparity = disparity.astype(np.float32)
- 
-    # Scaling down the disparity values and normalizing them 
-    #disparity = (disparity/16.0 - minDisparity)/numDisparities
-    #norm_coeff = 255/ disparity.max()
-    #Apply filter to disparity
-
+    # Applying filter
     wlsDisparity = wlsFilter.filter(disparityL, frameL,disparity_map_right= disparityR)
     
-    #Display fps
+    ''' --------------Disparity Perfomance Indicators are pending -> GT map ---------------------------------
+    confMap = wlsFilter.getConfidenceMap()
+    ROIf = wlsFilter.getROI()
+
+    MSE_before = cv2.ximgproc.computeMSE(GT_disp, disparityL, ROIf)
+    MSE_after = cv2.ximgproc.computeMSE(GT_disp, wlsDisparity, ROIf)
+    percent_bad_before = cv2.ximgproc.computeBadPixelPercent(GT_disp, disparityL, ROIf)
+    percent_bad_after = cv2.ximgproc.computeBadPixelPercent(GT_disp, wlsDisparity, ROIf)
+
+    print('MSE before filtering: {:.2f}'.format(MSE_before))
+    print('MSE after filtering: {:.2f}'.format(MSE_after))
+    print('Percent of bad pixels before filtering: {:.2f}'.format(percent_bad_before))
+    print('Percent of bad pixels after filtering: {:.2f}'.format(percent_bad_after))'''
+    
+    # Display fps
     font = cv2.FONT_HERSHEY_SIMPLEX
     newTime = time.time()
     fps = 1/(newTime - prevTime)
@@ -166,12 +168,9 @@ while capR.isOpened() and capL.isOpened():
   
     # Displaying the disparity map
     #cv2.putText(disparity, fps_text, (7,70), font, 1, (100, 255, 0), 1)
-    filteredDispVis= getDisparityVis(wlsDisparity,  1)
-    cv2.imshow("filtered disparity", filteredDispVis)
+    filteredDispVis= getDisparityVis(wlsDisparity, 1)
+    cv2.imshow("Filtered Disparity", filteredDispVis)
                      
-
-
-    
     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

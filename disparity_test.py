@@ -33,7 +33,7 @@ else:
     # Creating an object of StereoSGBM algorithm
     stereo = cv2.StereoSGBM_create()
 
- # Updating the parameters based on the trackbar positions
+# Updating the parameters based on the saved info
 numDisparities = cv_file_disp.getNode('numDisparities').real()
 blockSize = cv_file_disp.getNode('blockSize').real()
 preFilterCap = cv_file_disp.getNode('preFilterCap').real()
@@ -122,7 +122,7 @@ while capR.isOpened() and capL.isOpened():
     #disparity = (disparity/16.0 - minDisparity)/numDisparities
     norm_coeff = 255/ disparity.max()
 
-   #Display fps
+    # Display fps
     font = cv2.FONT_HERSHEY_SIMPLEX
     newTime = time.time()
     fps = 1/(newTime - prevTime)
