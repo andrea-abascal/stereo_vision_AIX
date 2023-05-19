@@ -6,6 +6,7 @@ import numpy as np
 
 capL =cv2.VideoCapture(4)
 capR = cv2.VideoCapture(2)
+
 cv2.waitKey(2000)
 
 num = 0
@@ -34,7 +35,7 @@ while capR.isOpened() and capL.isOpened():
         
         cv2.imwrite('images/stereoRight/imageR'+str(num)+'.png',frameR)
         
-        print("images saved!")
+        print("images saved!: ", num)
         
         num+=1
 

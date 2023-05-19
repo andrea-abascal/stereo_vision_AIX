@@ -24,10 +24,7 @@ cv2.resizeWindow('disp',604,436)
  
 cv2.createTrackbar('numDisparities','disp',1,17,nothing)
 cv2.createTrackbar('blockSize','disp',5,50,nothing)
-#cv2.createTrackbar('preFilterType','disp',1,1,nothing)
-#cv2.createTrackbar('preFilterSize','disp',2,25,nothing)
 cv2.createTrackbar('preFilterCap','disp',5,62,nothing)
-#cv2.createTrackbar('textureThreshold','disp',10,100,nothing)
 cv2.createTrackbar('uniquenessRatio','disp',15,100,nothing)
 cv2.createTrackbar('speckleRange','disp',0,100,nothing)
 cv2.createTrackbar('speckleWindowSize','disp',3,25,nothing)
@@ -47,8 +44,8 @@ while capR.isOpened() and capL.isOpened():
     imgL_gray = cv2.cvtColor(frameL,cv2.COLOR_BGR2GRAY)
     
     # Undistort and rectify images
-    Right_nice = cv2.remap(imgR_gray, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
-    Left_nice = cv2.remap(imgL_gray, stereoMapL_x, stereoMapL_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    frameR = cv2.remap(imgR_gray, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    frameL = cv2.remap(imgL_gray, stereoMapL_x, stereoMapL_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
     
     xL, yL, wL, hL = roi_L
     xL = int(xL)
@@ -78,10 +75,7 @@ while capR.isOpened() and capL.isOpened():
     # Updating the parameters based on the trackbar positions
     numDisparities = cv2.getTrackbarPos('numDisparities','disp')*16
     blockSize = cv2.getTrackbarPos('blockSize','disp')*2 + 5
-    #preFilterType = cv2.getTrackbarPos('preFilterType','disp')
-    #preFilterSize = cv2.getTrackbarPos('preFilterSize','disp')*2 + 5
     preFilterCap = cv2.getTrackbarPos('preFilterCap','disp')
-    #textureThreshold = cv2.getTrackbarPos('textureThreshold','disp')
     uniquenessRatio = cv2.getTrackbarPos('uniquenessRatio','disp')
     speckleRange = cv2.getTrackbarPos('speckleRange','disp')
     speckleWindowSize = cv2.getTrackbarPos('speckleWindowSize','disp')*2
@@ -91,10 +85,7 @@ while capR.isOpened() and capL.isOpened():
     # Setting the updated parameters before computing disparity map
     stereo.setNumDisparities(numDisparities)
     stereo.setBlockSize(blockSize)
-    #stereo.setPreFilterType(preFilterType)
-    #stereo.setPreFilterSize(preFilterSize)
     stereo.setPreFilterCap(preFilterCap)
-    #stereo.setTextureThreshold(textureThreshold)
     stereo.setUniquenessRatio(uniquenessRatio)
     stereo.setSpeckleRange(speckleRange)
     stereo.setSpeckleWindowSize(speckleWindowSize)
@@ -122,21 +113,17 @@ while capR.isOpened() and capL.isOpened():
       # Display the resulting frame
     img = np.concatenate((frameL, frameR), axis = 1)
     cv2.imshow('Original Img', img)
-    cv2.imshow('Left', frameL)
-    cv2.imshow('Right', frameR)
+
     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
         
 print('Saving depth estimation parameters ......')
 
-cv_file = cv2.FileStorage('data/disparitySGBM_map_params.xml', cv2.FILE_STORAGE_WRITE)
+cv_file = cv2.FileStorage('data/disparity_map_paramsSGBM.xml', cv2.FILE_STORAGE_WRITE)
 cv_file.write("numDisparities",numDisparities)
 cv_file.write("blockSize",blockSize)
-#cv_file.write("preFilterType",preFilterType)
-#cv_file.write("preFilterSize",preFilterSize)
 cv_file.write("preFilterCap",preFilterCap)
-#cv_file.write("textureThreshold",textureThreshold)
 cv_file.write("uniquenessRatio",uniquenessRatio)
 cv_file.write("speckleRange",speckleRange)
 cv_file.write("speckleWindowSize",speckleWindowSize)
