@@ -13,6 +13,21 @@ roi_L = cv_file.getNode('roi_L').mat()
 roi_R= cv_file.getNode('roi_R').mat()
 cv_file.release()
 
+def getDisparityVis(src: np.ndarray, scale: float = 1.0) -> np.ndarray:
+    '''Replicated OpenCV C++ function
+
+    Found here: https://github.com/opencv/opencv_contrib/blob/b91a781cbc1285d441aa682926d93d8c23678b0b/modules/ximgproc/src/disparity_filters.cpp#L559
+    
+    Arguments:
+        src (np.ndarray): input numpy array
+        scale (float): scale factor
+
+    Returns:
+        dst (np.ndarray): scaled input array
+    '''
+    dst = (src * scale/16.0).astype(np.uint8)
+    return dst
+
 # Open both cameras
 capL =cv2.VideoCapture(4)
 capR = cv2.VideoCapture(2)
@@ -151,7 +166,7 @@ while capR.isOpened() and capL.isOpened():
   
     # Displaying the disparity map
     #cv2.putText(disparity, fps_text, (7,70), font, 1, (100, 255, 0), 1)
-    filteredDispVis= cv2.getDisparityVis(wlsDisparity, 'Scale', 1)
+    filteredDispVis= getDisparityVis(wlsDisparity,  1)
     cv2.imshow("filtered disparity", filteredDispVis)
                      
 
