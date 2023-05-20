@@ -32,8 +32,8 @@ def getDisparityVis(src: np.ndarray, scale: float = 1.0) -> np.ndarray:
 capL =cv2.VideoCapture(4)
 capR = cv2.VideoCapture(2)
 
-cv2.namedWindow('disp',cv2.WINDOW_NORMAL)
-cv2.resizeWindow('disp',640,480)
+cv2.namedWindow('Filtered Disparity',cv2.WINDOW_NORMAL)
+cv2.resizeWindow('Filtered Disparity',640,480)
 
 # Select Block Matcher algorithm and open its corresponding parameters
 
@@ -167,8 +167,8 @@ while capR.isOpened() and capL.isOpened():
     print(fps_text)
   
     # Displaying the disparity map
-    #cv2.putText(disparity, fps_text, (7,70), font, 1, (100, 255, 0), 1)
     filteredDispVis= getDisparityVis(wlsDisparity, 1)
+    #cv2.putText(filteredDispVis, fps_text, (7,70), font, 1, (100, 255, 0), 1)
     cv2.imshow("Filtered Disparity", filteredDispVis)
                      
     # Hit "q" to close the window

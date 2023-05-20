@@ -34,6 +34,22 @@ cv2.createTrackbar('minDisparity','disp',5,25,nothing)
 # Creating an object of StereoBM algorithm
 stereo = cv2.StereoSGBM_create()
 
+def getDisparityVis(src: np.ndarray, scale: float = 1.0) -> np.ndarray:
+    '''Replicated OpenCV C++ function
+
+    Found here: https://github.com/opencv/opencv_contrib/blob/b91a781cbc1285d441aa682926d93d8c23678b0b/modules/ximgproc/src/disparity_filters.cpp#L559
+    
+    Arguments:
+        src (np.ndarray): input numpy array
+        scale (float): scale factor
+
+    Returns:
+        dst (np.ndarray): scaled input array
+    '''
+    dst = (src * scale/16.0).astype(np.uint8)
+    return dst
+
+
 
 while capR.isOpened() and capL.isOpened():
     # Capture frame-by-frame
@@ -91,7 +107,7 @@ while capR.isOpened() and capL.isOpened():
  
     # Calculating disparity using the StereoBM algorithm
     disparity = stereo.compute(frameL,frameR,cv2.CV_32F)
-    # NOTE: Code returns a 16bit signed single channel image,
+    '''# NOTE: Code returns a 16bit signed single channel image,
     # CV_16S containing a disparity map scaled by 16. Hence it 
     # is essential to convert it to CV_32F and scale it down 16 times.
  
@@ -104,30 +120,40 @@ while capR.isOpened() and capL.isOpened():
 
  
     # Displaying the disparity map
-    cv2.imshow("disp",disparity* norm_coeff/255)
-                     
+    cv2.imshow("disp",disparity* norm_coeff/255)'''
+
+    # Displaying the disparity map
+    filteredDispVis= getDisparityVis(disparity, 1)
+    #cv2.putText(filteredDispVis, fps_text, (7,70), font, 1, (100, 255, 0), 1)
+    cv2.imshow('disp', filteredDispVis)
+                                      
 
     # Display the resulting frame
     img = np.concatenate((frameL, frameR), axis = 1)
     cv2.imshow('Original Img', img)
 
-    # Hit "q" to close the window
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-        
-print('Saving depth estimation parameters ......')
+    # Hit "s" to save parameters and  close the window
+    if cv2.waitKey(1) & 0xFF == ord('s'):
+      print('Saving depth estimation parameters ......')
 
-cv_file = cv2.FileStorage('data/disparity_map_paramsSGBM.xml', cv2.FILE_STORAGE_WRITE)
-cv_file.write("numDisparities",numDisparities)
-cv_file.write("blockSize",blockSize)
-cv_file.write("preFilterCap",preFilterCap)
-cv_file.write("uniquenessRatio",uniquenessRatio)
-cv_file.write("speckleRange",speckleRange)
-cv_file.write("speckleWindowSize",speckleWindowSize)
-cv_file.write("disp12MaxDiff",disp12MaxDiff)
-cv_file.write("minDisparity",minDisparity)
-cv_file.write("M",39.075)
-cv_file.release()
+      cv_file = cv2.FileStorage('data/disparity_map_paramsSGBM.xml', cv2.FILE_STORAGE_WRITE)
+      cv_file.write("numDisparities",numDisparities)
+      cv_file.write("blockSize",blockSize)
+      cv_file.write("preFilterCap",preFilterCap)
+      cv_file.write("uniquenessRatio",uniquenessRatio)
+      cv_file.write("speckleRange",speckleRange)
+      cv_file.write("speckleWindowSize",speckleWindowSize)
+      cv_file.write("disp12MaxDiff",disp12MaxDiff)
+      cv_file.write("minDisparity",minDisparity)
+      cv_file.write("M",39.075)
+      cv_file.release()
+      break
+    
+    # Hit "q" to close the window
+    elif cv2.waitKey(1) & 0xFF == ord('q'):
+      break
+        
+
 
 # Release and destroy all windows before termination
 capR.release()

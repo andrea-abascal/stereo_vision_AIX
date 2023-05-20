@@ -44,5 +44,6 @@ cv_file.write('stereoMapR_x',stereoMapR[0])
 cv_file.write('stereoMapR_y',stereoMapR[1])
 cv_file.write('roi_L',roi_L)
 cv_file.write('roi_R',roi_R)
+cv_file.write('Q',Q)
 
 cv_file.release()

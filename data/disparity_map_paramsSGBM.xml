@@ -2,11 +2,11 @@
 <opencv_storage>
 <numDisparities>96</numDisparities>
 <blockSize>25</blockSize>
-<preFilterCap>20</preFilterCap>
-<uniquenessRatio>5</uniquenessRatio>
+<preFilterCap>5</preFilterCap>
+<uniquenessRatio>0</uniquenessRatio>
 <speckleRange>15</speckleRange>
-<speckleWindowSize>16</speckleWindowSize>
-<disp12MaxDiff>10</disp12MaxDiff>
-<minDisparity>15</minDisparity>
+<speckleWindowSize>26</speckleWindowSize>
+<disp12MaxDiff>9</disp12MaxDiff>
+<minDisparity>17</minDisparity>
 <M>3.9075000000000003e+01</M>
 </opencv_storage>
