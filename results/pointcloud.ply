@@ -1,12 +1,12 @@
-ply,
-    format ascii 1.0,
-    element vertex 42930,
-    property float x,
-    property float y,
-    property float z,
-    property uchar red,
-    property uchar green,
-    property uchar blue,
+ply
+    format ascii 1.0
+    element vertex 42930
+    property float x
+    property float y
+    property float z
+    property uchar red
+    property uchar green
+    property uchar blue
     end_header
      0.732899 -133.453049 963.503235 205 205 205
  3.476357 -103.701881 755.688782 203 203 203
