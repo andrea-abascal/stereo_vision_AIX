@@ -14,6 +14,11 @@ roi_R= cv_file.getNode('roi_R').mat()
 Q = cv_file.getNode('Q').mat()
 cv_file.release()
 
+cv_file = cv2.FileStorage()
+cv_file.open('data/calibrationParameters.xml', cv2.FileStorage_READ)
+k = cv_file.getNode('newCameraMatrixL').mat()
+cv_file.release()
+
 def getDisparityVis(src: np.ndarray, scale: float = 1.0) -> np.ndarray:
     dst = (src * scale/16.0).astype(np.uint8)
     return dst
@@ -25,10 +30,13 @@ capR = cv2.VideoCapture(2)
 cv2.namedWindow('Filtered Disparity',cv2.WINDOW_NORMAL)
 cv2.resizeWindow('Filtered Disparity',640,480)
 
+cv2.namedWindow('Depth Map',cv2.WINDOW_NORMAL)
+cv2.resizeWindow('Depth Map',640,480)
+
 # Select Block Matcher algorithm and open its corresponding parameters
 
 cv_file_disp = cv2.FileStorage()
-cv_file_disp.open('data/disparity_map_params.xml', cv2.FileStorage_READ)
+cv_file_disp.open('data/disparity_map_paramsSGBM.xml', cv2.FileStorage_READ)
 
 # Creating an object of StereoBM algorithm
 leftMatcher = cv2.StereoSGBM_create()
@@ -72,7 +80,8 @@ prevTime = 0
 newTime = 0
 
 baseline =100
-focal = 23
+focal = (k[0][0] + k[1][1]) * 0.5
+
 while capR.isOpened() and capL.isOpened():
     # Capture frame-by-frame
     retR, frameR = capR.read()
@@ -122,17 +131,25 @@ while capR.isOpened() and capL.isOpened():
     prevTime = newTime
     fps_text = 'FPS: {:.2f}'.format(fps)
     print(fps_text)
-  
+    
     # Displaying the disparity map
     filteredDispVis= getDisparityVis(wlsDisparity, 1)
     #cv2.putText(filteredDispVis, fps_text, (7,70), font, 1, (100, 255, 0), 1)
     cv2.imshow("Filtered Disparity", filteredDispVis)
 
 
-    depthMap = (focal * baseline) / (filteredDispVis)
-    cv2.imshow("Filtered Disparity", filteredDispVis)
-    disp_v2 = cv2.applyColorMap(depthMap, cv2.COLORMAP_JET)
-    cv2.imshow("Depth Map", depthMap)              
+    depthMap = int(focal * baseline) / (filteredDispVis)
+    depthMap = depthMap - depthMap.min()
+    depthMap = depthMap/ depthMap.max() # normalize the data to 0 - 1
+    depthMap = 255 * depthMap # Now scale by 255
+    depthMap = depthMap.astype(np.uint8)
+
+    #print('not conv: ', wlsDisparity.dtype, 'size: ', wlsDisparity.shape)
+    #print('dispvis conv: ', filteredDispVis.dtype, 'size: ', filteredDispVis.shape)
+    #print('depth conv: ', depthMap.dtype, 'size: ', depthMap.shape)
+
+    disp_v2 = cv2.applyColorMap(depthMap, cv2.COLORMAP_SUMMER)
+    cv2.imshow("Depth Map", disp_v2)              
 
     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):

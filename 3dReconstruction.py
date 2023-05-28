@@ -1,6 +1,10 @@
 import numpy as np
 import cv2
 import time
+from mpl_toolkits import mplot3d
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
 
 # Camera parameters to undistort and rectify images
 cv_file = cv2.FileStorage()
@@ -17,6 +21,41 @@ cv_file.release()
 def getDisparityVis(src: np.ndarray, scale: float = 1.0) -> np.ndarray:
     dst = (src * scale/16.0).astype(np.uint8)
     return dst
+
+def write_ply(fn, verts, colors):
+    ply_header = '''ply,
+    format ascii 1.0,
+    element vertex %(vert_num)d,
+    property float x,
+    property float y,
+    property float z,
+    property uchar red,
+    property uchar green,
+    property uchar blue,
+    end_header
+    '''
+    out_colors = colors.copy()
+    verts = verts.reshape(-1,3)
+    verts = np.hstack([verts, out_colors])
+    with open(fn, 'wb') as f:
+        f.write((ply_header % dict(vert_num = len(verts))).encode('utf-8'))
+        np.savetxt(f, verts, fmt = ' %f %f %f %d %d %d')
+
+
+def get_pts(infile):
+	data = np.loadtxt(infile, delimiter=',')
+	return data[12:,0], data[12:,1], data[12:,2] #returns X,Y,Z points skipping the first 12 lines
+	
+def plot_ply(infile):
+	
+	fig = plt.figure()
+	ax = fig.add_subplot(111, projection='3d')
+	x,y,z = get_pts(infile)
+	ax.scatter(x, y, z, c='r', marker='o')
+	ax.set_xlabel('X Label')
+	ax.set_ylabel('Y Label')
+	ax.set_zlabel('Z Label')
+	plt.show()	
 
 # Open both cameras
 capL =cv2.VideoCapture(4)
@@ -128,10 +167,32 @@ while capR.isOpened() and capL.isOpened():
 
 
     xyzMap = cv2.reprojectImageTo3D(wlsDisparity, Q)
-    colors = cv2.cvtColor(frameL, cv2.COLOR_BGR2RGB)
-    colors = colors. resize(-1,3)
+    
+    #reflect on x axis
+    reflect_matrix = np.identity(3)
+    reflect_matrix[0] *= -1
+    xyzMap = np.matmul(xyzMap,reflect_matrix)
 
-    #write_ply('out.ply', )
+    #extract colors from image
+    colors = cv2.cvtColor(frameL, cv2.COLOR_BGR2RGB)
+    
+    #filter by min disparity
+    mask = filteredDispVis > filteredDispVis.min()
+    out_points = xyzMap[mask]
+    out_colors = colors[mask]
+
+    #filter by dimension
+    idx = np.fabs(out_points[:,0]) < 4.5
+    out_points = out_points[idx]
+    out_colors = out_colors.reshape(-1, 3)
+    out_colors = out_colors[idx]
+
+    write_ply('results/pointcloud.ply', out_points, out_colors)
+    
+    
+    infile = get_pts('results/pointcloud.ply')
+
+    plot_ply(infile)
                      
     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):
