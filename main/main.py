@@ -3,9 +3,10 @@ import cv2
 import open3d as o3d
 
 # Import user functions
-import rectify_undistort as imgPreprocess
-import fps_calculation as fps
+from rectify_undistort import rectify_undistort as imgPreprocess
+from fps_calculation import fps_calculation as fps
 import disparity 
+from depth import getDepthMap
 import pointcloud
 
 # Camera parameters to undistort and rectify images
@@ -18,6 +19,11 @@ stereoMapR_y = cv_file.getNode('stereoMapR_y').mat()
 roi_L = cv_file.getNode('roi_L').mat()
 roi_R= cv_file.getNode('roi_R').mat()
 Q = cv_file.getNode('Q').mat()
+cv_file.release()
+
+cv_file = cv2.FileStorage()
+cv_file.open('data/calibrationParameters.xml', cv2.FileStorage_READ)
+k = cv_file.getNode('newCameraMatrixL').mat()
 cv_file.release()
 
 # Get parameters from block matcher algorithm 
@@ -37,8 +43,8 @@ cv_file_disp.release()
 capL =cv2.VideoCapture(4)
 capR = cv2.VideoCapture(2)
 
-cv2.namedWindow('Filtered Disparity',cv2.WINDOW_NORMAL)
-cv2.resizeWindow('Filtered Disparity',640,480)
+#cv2.namedWindow('Filtered Disparity',cv2.WINDOW_NORMAL)
+#cv2.resizeWindow('Filtered Disparity',640,480)
 
 
 # Creating an object of StereoBM algorithm
@@ -65,12 +71,50 @@ sigma = 1.5
 wlsFilter.setLambda(lmbda)
 wlsFilter.setSigmaColor(sigma)
 
+baseline = 100
+focal = (k[0][0] + k[1][1]) * 0.5
+num = 0
 while capR.isOpened() and capL.isOpened():
    
+    '''# Capture frame-by-frame
+    ret, frameL = capL.read()
+    ret, frameR = capR.read()
+
     # Rectify and undistort frames
-    frameL = imgPreprocess(capL, stereoMapL_x, stereoMapL_y, roi_L, roi_R)
-    frameR = imgPreprocess(capR, stereoMapR_x, stereoMapR_y, roi_R, roi_L)
+    frameL , frameR = imgPreprocess(frameL,frameR, stereoMapL_x, stereoMapL_y,stereoMapR_x, stereoMapR_y, roi_L, roi_R)
+'''
+    # Capture frame-by-frame
+    retR, frame_R = capR.read()
+    retL, frame_L = capL.read()
+    
+    imgR_gray = cv2.cvtColor(frame_R,cv2.COLOR_BGR2GRAY)
+    imgL_gray = cv2.cvtColor(frame_L,cv2.COLOR_BGR2GRAY)
+    
+    # Undistort and rectify images
+    frameR = cv2.remap(imgR_gray, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    frameL = cv2.remap(imgL_gray, stereoMapL_x, stereoMapL_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    
+    # Crop the image usion ROI
+    xL, yL, wL, hL = roi_L
+    xL = int(xL)
+    yL = int(yL)
+    wL = int(wL)
+    hL = int(hL)
+    frameL = frameL[yL:yL+hL, xL:xL+wL]
    
+    xR, yR, wR, hR = roi_R
+    xR = int(xR)
+    yR = int(yR)
+    wR = int(wR)
+    hR = int(hR)
+    frameR = frameR[yR:yR+hR, xR:xR+wR]
+
+    w = min(wL,wR)
+    h = hL
+
+    frameL = cv2.resize(frameL, (w,h),interpolation = cv2.INTER_AREA)
+
+    frameR = cv2.resize(frameR, (w,h),interpolation = cv2.INTER_AREA)
     # Calculating disparity
     disparityL = leftMatcher.compute(frameL,frameR)
     disparityR = rightMatcher.compute(frameR,frameL)
@@ -82,26 +126,43 @@ while capR.isOpened() and capL.isOpened():
     filteredDispVis= disparity.getDisparityVis(wlsDisparity, 1)
     cv2.imshow("Filtered Disparity", filteredDispVis)
 
-    # 3D map and colors
-    xyzMap = cv2.reprojectImageTo3D(wlsDisparity, Q)
-    points, colors = pointcloud.points(xyzMap,frameL,filteredDispVis)
     
-    # Generate the point cloud
-    pointcloud.write_ply('results/pointcloud.ply', points, colors)
+    depthMap = getDepthMap(focal, baseline,filteredDispVis)
+    depthVis = cv2.applyColorMap(depthMap, cv2.COLORMAP_SUMMER)
+    cv2.imshow("Depth Map", depthVis) 
     
-    # Read the point cloud
-    pcd = o3d.io.read_point_cloud('results/pointcloud.ply') 
-
-    # Visualize the point cloud within open3d
-    o3d.visualization.draw_geometries([pcd]) 
     
     # Compute fps
-    fps = fps()
-    print(fps)
+    '''fps = fps()
+    print(fps)'''
                      
-    # Hit "q" to close the window
+     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+    elif cv2.waitKey(1) & 0xFF == ord('s'): # wait for 's' key to save
+        
+        # 3D map and colors
+        xyzMap = cv2.reprojectImageTo3D(wlsDisparity, Q)
+        points, colors = pointcloud.points(xyzMap,frame_L,filteredDispVis)
+        
+        # Generate the point cloud
+        pointcloud.write_ply('results/pointcloud'+str(num)+'.ply', points, colors)
+        
+        # Read the point cloud
+        pcd = o3d.io.read_point_cloud('results/pointcloud'+str(num)+'.ply') 
+
+        # Visualize the point cloud within open3d
+        o3d.visualization.draw_geometries([pcd]) 
+
+        cv2.imwrite('reconstruction/depth'+str(num)+'.png',depthVis)
+        
+        cv2.imwrite('reconstruction/disparity'+str(num)+'.png',filteredDispVis)
+        
+        cv2.imwrite('reconstruction/pointcloud'+str(num)+'.png',frameR)
+        
+        print("images saved!: ", num)
+        
+        num+=1
         
 
 # Release and destroy all windows before termination

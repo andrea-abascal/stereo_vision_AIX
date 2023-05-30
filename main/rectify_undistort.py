@@ -2,33 +2,37 @@ import sys
 import cv2
 
 
-def rectify_undistort(cap, stereoMap_x, stereoMap_y, roi_1, roi_2):
-    # Capture frame-by-frame
-    ret, frame = cap.read()
-    
-    img_gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    
+def rectify_undistort(frameL, frameR, stereoMapL_x, stereoMapL_y, stereoMapR_x, stereoMapR_y, roi_L, roi_R):
+
+    img_grayL = cv2.cvtColor(frameL,cv2.COLOR_BGR2GRAY)
+    img_grayR = cv2.cvtColor(frameR,cv2.COLOR_BGR2GRAY)
+
     
     # Undistort and rectify images
-    frame = cv2.remap(img_gray, stereoMap_x, stereoMap_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    frameL = cv2.remap(img_grayL, stereoMapL_x, stereoMapL_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+    frameR = cv2.remap(img_grayR, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
     
     # Crop the image using ROI
-    x, y, w1, h = roi_1
-    x = int(x)
-    y = int(y)
-    w1 = int(w1)
-    h = int(h)
-    frame = frame[y:y+h, x:x+w1]
+    xL, yL, wL, hL = roi_L
+    xL = int(xL)
+    yL = int(yL)
+    wL = int(wL)
+    hL = int(h)
+    frameL = frameL[yL:yL+hL, xL:xL+wL]
    
-    x2, y2, w2, h2 = roi_2
-    w2 = int(w2)
-    
-    w = min(w1,w1)
-    h = h
+    xR, yR, wR, hR = roi_R
+    xR = int(xR)
+    yR = int(yR)
+    wR = int(wR)
+    hR = int(hR)
 
-    frame = cv2.resize(frame, (w,h),interpolation = cv2.INTER_AREA)
+    w = min(wL,wR)
+    h = hL
 
-    return frame
+    frameL = cv2.resize(frameL, (w,h),interpolation = cv2.INTER_AREA)
+    frameR = cv2.resize(frameR, (w,h),interpolation = cv2.INTER_AREA)
+
+    return frameL, frameR
 
 
    

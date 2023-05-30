@@ -2,12 +2,12 @@ import sys
 import time
 
 
-# Create varaibles for fps calculation
-prevTime = 0
-newTime = 0
+
 
 def fps_calculation():
-    
+    # Create varaibles for fps calculation
+    prevTime = 0
+    newTime = 0
     # Display fps
     
     newTime = time.time()

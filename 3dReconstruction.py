@@ -4,6 +4,7 @@ import time
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+import open3d as o3d
 
 
 # Camera parameters to undistort and rectify images
@@ -23,15 +24,15 @@ def getDisparityVis(src: np.ndarray, scale: float = 1.0) -> np.ndarray:
     return dst
 
 def write_ply(fn, verts, colors):
-    ply_header = '''ply,
-    format ascii 1.0,
+    ply_header = '''ply
+    format ascii 1.0
     element vertex %(vert_num)d,
-    property float x,
-    property float y,
-    property float z,
-    property uchar red,
-    property uchar green,
-    property uchar blue,
+    property float x
+    property float y
+    property float z
+    property uchar red
+    property uchar green
+    property uchar blue
     end_header
     '''
     out_colors = colors.copy()
@@ -61,8 +62,8 @@ def plot_ply(infile):
 capL =cv2.VideoCapture(4)
 capR = cv2.VideoCapture(2)
 
-cv2.namedWindow('Filtered Disparity',cv2.WINDOW_NORMAL)
-cv2.resizeWindow('Filtered Disparity',640,480)
+#cv2.namedWindow('Filtered Disparity',cv2.WINDOW_NORMAL)
+#cv2.resizeWindow('Filtered Disparity',640,480)
 
 # Select Block Matcher algorithm and open its corresponding parameters
 
@@ -110,13 +111,17 @@ wlsFilter.setSigmaColor(sigma)
 prevTime = 0
 newTime = 0
 
+# Create a visualization window
+vis = o3d.visualization.Visualizer()
+vis.create_window()
+
 while capR.isOpened() and capL.isOpened():
     # Capture frame-by-frame
     retR, frameR = capR.read()
-    retL, frameL = capL.read()
+    retL, cframeL = capL.read()
     
     imgR_gray = cv2.cvtColor(frameR,cv2.COLOR_BGR2GRAY)
-    imgL_gray = cv2.cvtColor(frameL,cv2.COLOR_BGR2GRAY)
+    imgL_gray = cv2.cvtColor(cframeL,cv2.COLOR_BGR2GRAY)
     
     # Undistort and rectify images
     frameR = cv2.remap(imgR_gray, stereoMapR_x, stereoMapR_y,cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
@@ -163,7 +168,7 @@ while capR.isOpened() and capL.isOpened():
     # Displaying the disparity map
     filteredDispVis= getDisparityVis(wlsDisparity, 1)
     #cv2.putText(filteredDispVis, fps_text, (7,70), font, 1, (100, 255, 0), 1)
-    cv2.imshow("Filtered Disparity", filteredDispVis)
+    #cv2.imshow("Filtered Disparity", filteredDispVis)
 
 
     xyzMap = cv2.reprojectImageTo3D(wlsDisparity, Q)
@@ -174,11 +179,12 @@ while capR.isOpened() and capL.isOpened():
     xyzMap = np.matmul(xyzMap,reflect_matrix)
 
     #extract colors from image
-    colors = cv2.cvtColor(frameL, cv2.COLOR_BGR2RGB)
+    colors = cv2.cvtColor(cframeL, cv2.COLOR_BGR2RGB)
     
     #filter by min disparity
-    mask = filteredDispVis > filteredDispVis.min()
+    mask = wlsDisparity > wlsDisparity.min()
     out_points = xyzMap[mask]
+    print(out_points.shape)
     out_colors = colors[mask]
 
     #filter by dimension
@@ -190,10 +196,21 @@ while capR.isOpened() and capL.isOpened():
     write_ply('results/pointcloud.ply', out_points, out_colors)
     
     
-    infile = get_pts('results/pointcloud.ply')
+    '''infile = get_pts('results/pointcloud.ply')
 
-    plot_ply(infile)
-                     
+    plot_ply(infile)'''
+
+    # Read the point cloud
+    pcd = o3d.io.read_point_cloud('results/pointcloud.ply') 
+
+    # Visualize the point cloud within open3d
+    o3d.visualization.draw_geometries([pcd]) 
+    
+    '''vis.add_geometry(pcd)
+    vis.update_geometry()
+    vis.poll_events()
+    vis.update_renderer()'''
+               
     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
@@ -203,3 +220,5 @@ while capR.isOpened() and capL.isOpened():
 capR.release()
 capL.release()
 cv2.destroyAllWindows()
+# Close the visualization window
+vis.destroy_window()
