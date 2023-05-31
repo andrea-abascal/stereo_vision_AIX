@@ -3,11 +3,7 @@ import numpy as np
 import cv2
 
 def points(xyzMap, frameL,filteredDispVis):    
-    #reflect on x axis
-    reflect_matrix = np.identity(3)
-    reflect_matrix[0] *= -1
-    xyzMap = np.matmul(xyzMap,reflect_matrix)
-
+    
     #extract colors from image
     colors = cv2.cvtColor(frameL, cv2.COLOR_BGR2RGB)
     
@@ -16,12 +12,6 @@ def points(xyzMap, frameL,filteredDispVis):
     out_points = xyzMap[mask]
     out_colors = colors[mask]
 
-    #filter by dimension
-    '''idx = np.fabs(out_points[:,0]) < 4.5
-    out_points = out_points[idx]
-    out_colors = out_colors.reshape(-1, 3)
-    out_colors = out_colors[idx]
-    '''
     return out_points, out_colors
 
 def write_ply(fn, verts, colors):

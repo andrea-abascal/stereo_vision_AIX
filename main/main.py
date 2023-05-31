@@ -66,12 +66,9 @@ sigma = 1.5
 wlsFilter.setLambda(lmbda)
 wlsFilter.setSigmaColor(sigma)
 
-vis = o3d.visualization.Visualizer()        
-vis.create_window('Point Cloud Scene',569,466)
-view_control = vis.get_view_control()
+vis = o3d.visualization.Visualizer() 
 
-
-num = 1
+num = 8
 while capR.isOpened() and capL.isOpened():
     '''
     # Capture frame-by-frame
@@ -120,6 +117,9 @@ while capR.isOpened() and capL.isOpened():
     frame_L = cv2.resize(frame_L, (w,h),interpolation = cv2.INTER_AREA)
     frameR = cv2.resize(frameR, (w,h),interpolation = cv2.INTER_AREA)
     
+    cv2.imshow("Step 1: Scene", frame_L)
+
+
     # Calculating disparity
     disparityL = leftMatcher.compute(frameL,frameR)
     disparityR = rightMatcher.compute(frameR,frameL)
@@ -129,14 +129,13 @@ while capR.isOpened() and capL.isOpened():
 
     # Displaying the disparity map
     filteredDispVis= disparity.getDisparityVis(wlsDisparity, 1)
-    cv2.imshow("Filtered Disparity", filteredDispVis)
-    cv2.imshow("Scene", frame_L)
-
+    cv2.imshow("Step 2: Filtered Disparity", filteredDispVis)
+    
     xyzMap = cv2.reprojectImageTo3D(filteredDispVis, Q)
 
     depthMap = getDepthMap(xyzMap)
     depthVis = cv2.applyColorMap(depthMap, cv2.COLORMAP_SUMMER)
-    cv2.imshow("Depth Map", depthVis) 
+    cv2.imshow("Step 3: Depth Map", depthVis) 
     
     # Compute fps
     '''fps = fps()
@@ -147,13 +146,13 @@ while capR.isOpened() and capL.isOpened():
     if  key & 0xFF == ord('q'):
         break
     elif key & 0xFF == ord('s'): # wait for 's' key to save
-        ''' if num == 1:
+        if num == 8:
             # Create a visualization window
-            vis = o3d.visualization.Visualizer()        
-            vis.create_window('Point Cloud Scene',569,466)
+                   
+            vis.create_window('Step 4: Reconstructed Scene',569,466)
             view_control = vis.get_view_control()
         else:
-            pass'''
+            pass
         vis.clear_geometries()
         # 3D map and colors
         points, colors = pointcloud.points(xyzMap,frame_L,filteredDispVis)
@@ -165,9 +164,9 @@ while capR.isOpened() and capL.isOpened():
         pcd = o3d.io.read_point_cloud('results/s'+str(num)+'pointcloud.ply') 
         vis.add_geometry(pcd)        
         
-        view_control.set_zoom(0.02)
-        view_control.set_up([-0.0023108895800350508, -0.98944745178302018, 0.14487373795632214])
-        view_control.set_lookat([-11.754688398493897, 26.532128866412869, 70.639941733042278])
+        view_control.set_zoom(0.0002)
+        view_control.set_up([ -0.0023108895800350508, -0.98944745178302018, 0.14487373795632214 ])
+        view_control.set_lookat([53.331142545750687, 26.46709928743525, 68.584828769678921 ])
         view_control.set_front([-0.031372204363311264, -0.14487454624381371, -0.98895255227135936])
         vis.run()
 
