@@ -66,6 +66,11 @@ sigma = 1.5
 wlsFilter.setLambda(lmbda)
 wlsFilter.setSigmaColor(sigma)
 
+vis = o3d.visualization.Visualizer()        
+vis.create_window('Point Cloud Scene',569,466)
+view_control = vis.get_view_control()
+
+
 num = 1
 while capR.isOpened() and capL.isOpened():
     '''
@@ -142,45 +147,46 @@ while capR.isOpened() and capL.isOpened():
     if  key & 0xFF == ord('q'):
         break
     elif key & 0xFF == ord('s'): # wait for 's' key to save
-        if num == 1:
+        ''' if num == 1:
             # Create a visualization window
             vis = o3d.visualization.Visualizer()        
             vis.create_window('Point Cloud Scene',569,466)
             view_control = vis.get_view_control()
         else:
-            pass
-        
+            pass'''
+        vis.clear_geometries()
         # 3D map and colors
         points, colors = pointcloud.points(xyzMap,frame_L,filteredDispVis)
         
         # Generate the point cloud
-        pointcloud.write_ply('results/pointcloud'+str(num)+'.ply', points, colors)
+        pointcloud.write_ply('results/s'+str(num)+'pointcloud.ply', points, colors)
         
         # Read the point cloud
-        pcd = o3d.io.read_point_cloud('results/pointcloud'+str(num)+'.ply') 
-
-        # Visualize the point cloud within open3d
-        vis.add_geometry(pcd)
+        pcd = o3d.io.read_point_cloud('results/s'+str(num)+'pointcloud.ply') 
+        vis.add_geometry(pcd)        
+        
         view_control.set_zoom(0.02)
         view_control.set_up([-0.0023108895800350508, -0.98944745178302018, 0.14487373795632214])
         view_control.set_lookat([-11.754688398493897, 26.532128866412869, 70.639941733042278])
         view_control.set_front([-0.031372204363311264, -0.14487454624381371, -0.98895255227135936])
-            
-        
         vis.run()
-        cv2.imwrite('reconstruction/depth'+str(num)+'.png',depthVis)
+
+        cv2.imwrite('reconstruction/s'+str(num)+'depth.png',depthVis)
         
-        cv2.imwrite('reconstruction/disparity'+str(num)+'.png',filteredDispVis)
+        cv2.imwrite('reconstruction/s'+str(num)+'disparity.png',filteredDispVis)
         
-        cv2.imwrite('reconstruction/scene'+str(num)+'.png',frame_L)
+        cv2.imwrite('reconstruction/s'+str(num)+'scene.png',frame_L)
     
-        vis.capture_screen_image('reconstruction/pointcloud'+str(num)+'.png')
+        vis.capture_screen_image('reconstruction/s'+str(num)+'pointcloud.png')
        
- 
-        print("images saved!: ", num)
+        print("Reconstruction data saved!: Scene",num)
         
         num+=1
         
+    elif key & 0xFF == ord('k'):
+        print('continue')
+        
+        pass
      
         
 
