@@ -21,11 +21,6 @@ roi_R= cv_file.getNode('roi_R').mat()
 Q = cv_file.getNode('Q').mat()
 cv_file.release()
 
-cv_file = cv2.FileStorage()
-cv_file.open('data/calibrationParameters.xml', cv2.FileStorage_READ)
-k = cv_file.getNode('newCameraMatrixL').mat()
-cv_file.release()
-
 # Get parameters from block matcher algorithm 
 cv_file_disp = cv2.FileStorage()
 cv_file_disp.open('data/disparity_map_paramsSGBM.xml', cv2.FileStorage_READ)
@@ -71,18 +66,22 @@ sigma = 1.5
 wlsFilter.setLambda(lmbda)
 wlsFilter.setSigmaColor(sigma)
 
-baseline = 100
-focal = (k[0][0] + k[1][1]) * 0.5
-num = 0
+num = 1
 while capR.isOpened() and capL.isOpened():
-   
-    '''# Capture frame-by-frame
-    ret, frameL = capL.read()
+    '''
+    # Capture frame-by-frame
+    ret, frame_L = capL.read()
     ret, frameR = capR.read()
 
+    imgR_gray = cv2.cvtColor(frameR,cv2.COLOR_BGR2GRAY)
+    imgL_gray = cv2.cvtColor(frame_L,cv2.COLOR_BGR2GRAY)
+    
+
     # Rectify and undistort frames
-    frameL , frameR = imgPreprocess(frameL,frameR, stereoMapL_x, stereoMapL_y,stereoMapR_x, stereoMapR_y, roi_L, roi_R)
-'''
+    frameL , frameR , w, h = imgPreprocess(imgL_gray,imgR_gray, stereoMapL_x, stereoMapL_y,stereoMapR_x, stereoMapR_y, roi_L, roi_R)
+    frame_L = cv2.resize(frame_L, (w,h),interpolation = cv2.INTER_AREA)
+
+    ''' 
     # Capture frame-by-frame
     retR, frame_R = capR.read()
     retL, frame_L = capL.read()
@@ -113,8 +112,9 @@ while capR.isOpened() and capL.isOpened():
     h = hL
 
     frameL = cv2.resize(frameL, (w,h),interpolation = cv2.INTER_AREA)
-
+    frame_L = cv2.resize(frame_L, (w,h),interpolation = cv2.INTER_AREA)
     frameR = cv2.resize(frameR, (w,h),interpolation = cv2.INTER_AREA)
+    
     # Calculating disparity
     disparityL = leftMatcher.compute(frameL,frameR)
     disparityR = rightMatcher.compute(frameR,frameL)
@@ -125,24 +125,32 @@ while capR.isOpened() and capL.isOpened():
     # Displaying the disparity map
     filteredDispVis= disparity.getDisparityVis(wlsDisparity, 1)
     cv2.imshow("Filtered Disparity", filteredDispVis)
+    cv2.imshow("Scene", frame_L)
 
-    
-    depthMap = getDepthMap(focal, baseline,filteredDispVis)
+    xyzMap = cv2.reprojectImageTo3D(filteredDispVis, Q)
+
+    depthMap = getDepthMap(xyzMap)
     depthVis = cv2.applyColorMap(depthMap, cv2.COLORMAP_SUMMER)
     cv2.imshow("Depth Map", depthVis) 
-    
     
     # Compute fps
     '''fps = fps()
     print(fps)'''
-                     
-     # Hit "q" to close the window
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    
+    key = cv2.waitKey(1)
+    # Hit "q" to close the window
+    if  key & 0xFF == ord('q'):
         break
-    elif cv2.waitKey(1) & 0xFF == ord('s'): # wait for 's' key to save
+    elif key & 0xFF == ord('s'): # wait for 's' key to save
+        if num == 1:
+            # Create a visualization window
+            vis = o3d.visualization.Visualizer()        
+            vis.create_window('Point Cloud Scene',569,466)
+            view_control = vis.get_view_control()
+        else:
+            pass
         
         # 3D map and colors
-        xyzMap = cv2.reprojectImageTo3D(wlsDisparity, Q)
         points, colors = pointcloud.points(xyzMap,frame_L,filteredDispVis)
         
         # Generate the point cloud
@@ -152,20 +160,32 @@ while capR.isOpened() and capL.isOpened():
         pcd = o3d.io.read_point_cloud('results/pointcloud'+str(num)+'.ply') 
 
         # Visualize the point cloud within open3d
-        o3d.visualization.draw_geometries([pcd]) 
-
+        vis.add_geometry(pcd)
+        view_control.set_zoom(0.02)
+        view_control.set_up([-0.0023108895800350508, -0.98944745178302018, 0.14487373795632214])
+        view_control.set_lookat([-11.754688398493897, 26.532128866412869, 70.639941733042278])
+        view_control.set_front([-0.031372204363311264, -0.14487454624381371, -0.98895255227135936])
+            
+        
+        vis.run()
         cv2.imwrite('reconstruction/depth'+str(num)+'.png',depthVis)
         
         cv2.imwrite('reconstruction/disparity'+str(num)+'.png',filteredDispVis)
         
-        cv2.imwrite('reconstruction/pointcloud'+str(num)+'.png',frameR)
-        
+        cv2.imwrite('reconstruction/scene'+str(num)+'.png',frame_L)
+    
+        vis.capture_screen_image('reconstruction/pointcloud'+str(num)+'.png')
+       
+ 
         print("images saved!: ", num)
         
         num+=1
+        
+     
         
 
 # Release and destroy all windows before termination
 capR.release()
 capL.release()
 cv2.destroyAllWindows()
+vis.destroy_window()

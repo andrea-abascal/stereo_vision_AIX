@@ -11,7 +11,7 @@ stereoMapR_x = cv_file.getNode('stereoMapR_x').mat()
 stereoMapR_y = cv_file.getNode('stereoMapR_y').mat()
 roi_L = cv_file.getNode('roi_L').mat()
 roi_R= cv_file.getNode('roi_R').mat()
-    
+
 capL =cv2.VideoCapture(4)
 capR = cv2.VideoCapture(2)
 cv2.waitKey(1000)
@@ -20,8 +20,8 @@ while capR.isOpened() and capL.isOpened():
     # Capture frame-by-frame
     retR, frameR = capR.read()
     retL, frameL = capL.read()
-    
 
+    
     # Undistort and rectify images
     frameL= cv2.remap(frameL, stereoMapL_x, stereoMapL_y, cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
     frameR= cv2.remap(frameR, stereoMapR_x, stereoMapR_y, cv2.INTER_LANCZOS4,cv2.BORDER_CONSTANT, 0)

@@ -87,6 +87,8 @@ while capR.isOpened() and capL.isOpened():
     retR, frameR = capR.read()
     retL, frameL = capL.read()
     
+    newTime = time.time()
+
     imgR_gray = cv2.cvtColor(frameR,cv2.COLOR_BGR2GRAY)
     imgL_gray = cv2.cvtColor(frameL,cv2.COLOR_BGR2GRAY)
     
@@ -123,33 +125,30 @@ while capR.isOpened() and capL.isOpened():
     
     # Applying filter
     wlsDisparity = wlsFilter.filter(disparityL, frameL,disparity_map_right= disparityR)
+    wlsDisparity[np.isnan(wlsDisparity)] = 0 
+    wlsDisparity[np.isinf(wlsDisparity)] = 0 
     
     
-    # Display fps
-    newTime = time.time()
-    fps = 1/(newTime - prevTime)
-    prevTime = newTime
-    fps_text = 'FPS: {:.2f}'.format(fps)
-    print(fps_text)
     
     # Displaying the disparity map
     filteredDispVis= getDisparityVis(wlsDisparity, 1)
     #cv2.putText(filteredDispVis, fps_text, (7,70), font, 1, (100, 255, 0), 1)
     cv2.imshow("Filtered Disparity", filteredDispVis)
 
-
-    depthMap = int(focal * baseline) / (filteredDispVis)
-    depthMap = depthMap - depthMap.min()
-    depthMap = depthMap/ depthMap.max() # normalize the data to 0 - 1
-    depthMap = 255 * depthMap # Now scale by 255
-    depthMap = depthMap.astype(np.uint8)
-
-    #print('not conv: ', wlsDisparity.dtype, 'size: ', wlsDisparity.shape)
-    #print('dispvis conv: ', filteredDispVis.dtype, 'size: ', filteredDispVis.shape)
-    #print('depth conv: ', depthMap.dtype, 'size: ', depthMap.shape)
+    depthMap = cv2.reprojectImageTo3D(filteredDispVis, Q, -1)
+    depthMap[np.isnan(depthMap)] = 0 
+    depthMap[np.isinf(depthMap)] = 0 
+    depthMap = cv2.normalize(depthMap, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
 
     disp_v2 = cv2.applyColorMap(depthMap, cv2.COLORMAP_SUMMER)
     cv2.imshow("Depth Map", disp_v2)              
+    
+    # Display fps
+    
+    fps = 1/(newTime - prevTime)
+    prevTime = newTime
+    fps_text = 'FPS: {:.2f}'.format(fps)
+    print(fps_text)
 
     # Hit "q" to close the window
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -160,3 +159,11 @@ while capR.isOpened() and capL.isOpened():
 capR.release()
 capL.release()
 cv2.destroyAllWindows()
+
+print("Saving parameters!")
+
+cv_file = cv2.FileStorage('data/Maps.xml', cv2.FILE_STORAGE_WRITE)
+
+cv_file.write('depth',depthMap)
+cv_file.write('disp',filteredDispVis)
+cv_file.release()

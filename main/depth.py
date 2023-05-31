@@ -1,12 +1,12 @@
 import sys
 import numpy as np
+import cv2
 
 
-def getDepthMap(focal, baseline, disparity):
-    depthMap = int(focal * baseline) / (disparity)
-    depthMap = depthMap - depthMap.min()
-    depthMap = depthMap/ depthMap.max() # normalize the data to 0 - 1
-    depthMap = 255 * depthMap # Now scale by 255
-    depthMap = depthMap.astype(np.uint8)
+def getDepthMap(depthMap):
+    depthMap[np.isnan(depthMap)] = 0 
+    depthMap[np.isinf(depthMap)] = 0 
+    depthMap = cv2.normalize(depthMap, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+
 
     return depthMap

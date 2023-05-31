@@ -16,8 +16,8 @@ def points(xyzMap, frameL,filteredDispVis):
     out_points = xyzMap[mask]
     out_colors = colors[mask]
 
-    '''#filter by dimension
-    idx = np.fabs(out_points[:,0]) < 4.5
+    #filter by dimension
+    '''idx = np.fabs(out_points[:,0]) < 4.5
     out_points = out_points[idx]
     out_colors = out_colors.reshape(-1, 3)
     out_colors = out_colors[idx]
@@ -25,19 +25,18 @@ def points(xyzMap, frameL,filteredDispVis):
     return out_points, out_colors
 
 def write_ply(fn, verts, colors):
-    ply_header = '''ply,
-    format ascii 1.0,
-    element vertex %(vert_num)d,
-    property float x,
-    property float y,
-    property float z,
-    property uchar red,
-    property uchar green,
-    property uchar blue,
+    ply_header = '''ply
+    format ascii 1.0
+    element vertex %(vert_num)d
+    property float x
+    property float y
+    property float z
+    property uchar red
+    property uchar green
+    property uchar blue
     end_header
     '''
     out_colors = colors.copy()
-    out_colors = out_colors.reshape(-1,3)
     verts = verts.reshape(-1,3)
     verts = np.hstack([verts, out_colors])
     with open(fn, 'wb') as f:
