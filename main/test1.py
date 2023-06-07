@@ -1,7 +1,7 @@
 import open3d as o3d
 
 # Load point cloud data (replace this with your own point cloud)
-pcd = o3d.io.read_point_cloud("results/s1pointcloud.ply")
+pcd = o3d.io.read_point_cloud("results/s5pointcloud.ply")
 
 # Create a visualization window
 vis = o3d.visualization.VisualizerWithKeyCallback()
