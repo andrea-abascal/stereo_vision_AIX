@@ -23,7 +23,7 @@ Once the set up is done the folowing progrmas must be runned:
 
 [4] disparity_param.py - This program is executed just once and it is meant to tune the differnt parameters that may affect the disparity map. The resulting rectification map is stored in the disparity_map_params.xml. A brief description of the parameters is mentioned below:
 
-    - Number of disparities (numDisparities): Sets the range of disparity values to be searched. Increasing the number of disparities increases the accuracy of the disparity map.
+    -- Number of disparities (numDisparities): Sets the range of disparity values to be searched. Increasing the number of disparities increases the accuracy of the disparity map.
 
     - Block size (blockSize): Size of the sliding window used for block matching to find corresponding pixels in a rectified stereo image pair.
 
@@ -43,8 +43,7 @@ Once the set up is done the folowing progrmas must be runned:
     
     - disp12MaxDiff: Pixels are matched both ways, from the left image to the right image and from the right image to left image. disp12MaxDiff defines the maximum allowable difference between the original left pixel and the back-matched pixel.
 
-[5] depth_estimation.py - 
-[6] 3d_reconstruction.py - 
+[5] disparity_paramSGBM.py - This program uses the StereoMatch algorithm based in Semi Global. It is executed just once and it is meant to tune the different parameters that may affect the disparity map. The resulting rectification map is stored in the disparity_map_paramsSGBM.xml. A brief description of the parameters is shown above.
 
 
 Test Programs
@@ -53,4 +52,12 @@ The following programs can be executed to run tests or verify some results. In o
 
 [*] rectification_test.py - This programs verifies that both camera streams are rectified (epipolar lines match). It displays both streams on a single window and green lines are drawn. The calibration board can be used to verify that lines pass through the same points. This program uses stereoMap.xml file.
 
-[*] disparity_test.py - This programs displays the disparity map using the previously tuned parameters. This program uses disparity_map_params.xml file.
+[*] disparity_test.py - This program displays the disparity map using the previously tuned parameters. The user can choose the type of stereo matching algorithm. This program uses disparity_map_params.xml file or disparity_map_paramsSGBM.xml file.
+
+[*] disparityWLSFilter_test.py - This program uses the desired stereo match algorithm chosen by the user, and it adds a WLS filter to video post processing the disparity map and enhances features.
+
+[*] depth_Map.py - This program displays the depth map from the obtained disparity map with the WLS filter applied. It allows the user to evaluate performance with FPS calculation.
+
+[*] 3D_reconstruction.py - This program uses the functionalities of previous programs to reproject 2D points into 3D points. These points and its associated RGB colors are stored in a PLY file pointcloud.ply.
+
+[*] visualize_PCD.py - After generating a PLY file with the 3D points in the previous program, this program allows the visualization of the point cloud using Open3D.
