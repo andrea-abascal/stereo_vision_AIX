@@ -1,13 +1,12 @@
-Abstract:
+Description:
 
-This project presents the development of a functional stereo vision system prototype that allows the 3D reconstruction of scenes. Usually, off-the-shelf stereo vision systems don't allow the user to customize for their complex needs, they also tend to be expensive and there are certain restrictions regarding the camera resolution or a fixed baseline value that may promote noise in the stereo maps, therefore the 3D reconstructions end up being very limited and of unwanted quality. 
+This project presents the development of a functional stereo vision application prototype that allows the 3D reconstruction of scenes. 
 
-Computer vision algorithms are applied to real-time video capture in order to compute geometric estimates that allow to determine the space coordinates of an object in a scene, and thus creating a 3D reconstruction equivalent to the space observed. Furthermore, an intelligent algorithm is used to reduce noise and deliver a 3D reconstruction with few errors.  On the other hand, CAD software and 3D printing are used to develop the case that keeps the hardware that builds the stereo system. Also a baseline modifier is added in between cameras to explore its effects on the space coordinates estimations.
+Computer vision algorithms are applied to real-time video capture in order to compute geometric estimates that allow to determine the space coordinates of an object in a scene, and thus creating a 3D reconstruction equivalent to the space observed. Furthermore, post-processing techniques are used to reduce noise and deliver a 3D reconstruction with few errors.  
 
-The result is a portable device with an embedded stereo vision system and the image  pre-, post-processing software for the scene reconstruction. Also the required documentation is generated to understand the functioning of the system and to analyze the effects of the results obtained in the different tests. This provides the user with a functional prototype that has better performance (improvements in image post-processing) and a lower cost of a customized system.
+The result is a software package with programs used in image preprocessing and post-processing that can be implemented in any stereo configuration with the objective of developing a system that virtualizes a physical space. This provides the user with a functional software prototype that allows for 3D reconstruction of scenes with results equivalents to the comercial options. 
 
-
-Once the set up is done the folowing progrmas must be runned:
+Once the set up is done the folowing programs must be runned:
 
 [1] img_cap.py - This program is executed just once and it is meant to capture and store the calibration images.
 
@@ -23,7 +22,7 @@ Once the set up is done the folowing progrmas must be runned:
 
 [4] disparity_param.py - This program is executed just once and it is meant to tune the differnt parameters that may affect the disparity map. The resulting rectification map is stored in the disparity_map_params.xml. A brief description of the parameters is mentioned below:
 
-    -- Number of disparities (numDisparities): Sets the range of disparity values to be searched. Increasing the number of disparities increases the accuracy of the disparity map.
+    - Number of disparities (numDisparities): Sets the range of disparity values to be searched. Increasing the number of disparities increases the accuracy of the disparity map.
 
     - Block size (blockSize): Size of the sliding window used for block matching to find corresponding pixels in a rectified stereo image pair.
 
